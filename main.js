@@ -16,16 +16,7 @@ let controls = new OrbitControls(camera, renderer.domElement);
 var axesHelper = new THREE.AxesHelper(40);
 scene.add(axesHelper);
 
-var boxGeometry = new THREE.BoxGeometry(80, 2, 80, 30, 1, 30);
-/*
-var planeMaterial = new THREE.MeshBasicMaterial({
-	color: 0xff0000,
-	wireframe: true
-});
-
-var plane = new THREE.Mesh(planeGeometry, planeMaterial);
-scene.add(plane);
-*/
+var boxGeometry = new THREE.BoxGeometry(80, 2, 80, 20, 1, 20);
 
 const uniformsData = {
 	u_time: {
@@ -34,10 +25,30 @@ const uniformsData = {
 	},
 };
 
-var material = new THREE.ShaderMaterial({
-	wireframe: true,
-	uniforms: uniformsData,
-	vertexShader: `
+const mareaPlana_VS = `
+	// projectionMatrix, modelViewMatrix, position ya las definió threejs
+	
+	uniform float u_time;
+
+	varying vec3 pos;
+
+	void main(){
+		vec4 result;
+		pos = position;
+
+		//result = vec4(position.x, 4.0*sin(position.z/4.0 + u_time) + 2.0*cos(position.x/6.0 + u_time) + position.y, position.z, 1.0);
+
+		//result = vec4(position.x, sin(position.z + u_time) + position.y, position.z, 1.0);
+
+		result = vec4(position.x, position.y, position.z, 1.0);		
+
+		gl_Position = projectionMatrix
+			* modelViewMatrix
+			* result;
+	}
+`;
+
+const mareaTranquila_VS = `
 	// projectionMatrix, modelViewMatrix, position ya las definió threejs
 	
 	uniform float u_time;
@@ -50,12 +61,63 @@ var material = new THREE.ShaderMaterial({
 
 		result = vec4(position.x, 4.0*sin(position.z/4.0 + u_time) + 2.0*cos(position.x/6.0 + u_time) + position.y, position.z, 1.0);
 
+		//result = vec4(position.x, sin(position.z + u_time) + position.y, position.z, 1.0);
+
+		//result = vec4(position.x, position.y, position.z, 1.0);		
+
 		gl_Position = projectionMatrix
 			* modelViewMatrix
 			* result;
 	}
-	`,
-	fragmentShader: `
+
+`;
+
+const mareaAgitada_VS = `
+	// projectionMatrix, modelViewMatrix, position ya las definió threejs
+	
+	uniform float u_time;
+
+	varying vec3 pos;
+
+	void main(){
+		vec4 result;
+		pos = position;
+
+		//result = vec4(position.x, 4.0*sin(position.z/4.0 + u_time) + 2.0*cos(position.x/6.0 + u_time) + position.y, position.z, 1.0);
+
+		//result = vec4(position.x, sin(position.z + u_time) + position.y, position.z, 1.0);
+
+		//result = vec4(position.x, position.y, position.z, 1.0);
+		
+		
+		if (position.x <= -20.0 || position.x >= 20.0){
+			result = vec4(position.x, 8.0*sin(position.z/4.0 + u_time) + 2.0*cos(position.x/6.0 + u_time) + position.y, position.z, 1.0);
+		} else if (position.x >= -20.0 && position.x <= -10.0){
+			result = vec4(position.x, 6.0*sin(position.z/4.0 + u_time) + 2.0*cos(position.x/6.0 + u_time) + position.y, position.z, 1.0);
+		} else if (position.x >= 10.0 && position.x <= 20.0){
+			result = vec4(position.x, 6.0*sin(position.z/4.0 + u_time) + 2.0*cos(position.x/6.0 + u_time) + position.y, position.z, 1.0);
+		} else {
+			//result = vec4(position.x, position.y, position.z, 1.0);
+			result = vec4(position.x, 4.0*sin(position.z/4.0 + u_time) + 2.0*cos(position.x/6.0 + u_time) + position.y, position.z, 1.0);
+		}
+		
+
+		gl_Position = projectionMatrix
+			* modelViewMatrix
+			* result;
+	}
+`;
+
+const colorNormal_FS = `
+	uniform float u_time;
+
+	varying vec3 pos;
+	void main(){
+		gl_FragColor = vec4(0.0, 0.7, 0.4, 1.0);
+	}
+`;
+
+const colorPsico_FS = `
 	uniform float u_time;
 
 	varying vec3 pos;
@@ -67,8 +129,17 @@ var material = new THREE.ShaderMaterial({
 			gl_FragColor = vec4(abs(cos(u_time)), abs(cos(u_time))-0.5, abs(sin(u_time)), 1.0);
 		}
 	}
-	`
+`;
+
+var material = new THREE.ShaderMaterial({
+	wireframe: false,
+	uniforms: uniformsData,
+	vertexShader: mareaTranquila_VS,
+	fragmentShader: colorNormal_FS
 });
+
+material.setValues({wireframe:true}); // apaga o enciende el wireframe
+material.setValues({vertexShader:mareaTranquila_VS});
 
 // uniendo con el shader
 var box = new THREE.Mesh(boxGeometry, material);
