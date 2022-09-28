@@ -25,10 +25,24 @@ scene.add(axesHelper);
 
 var boxGeometry = new THREE.BoxGeometry(80, 2, 80, 20, 1, 20);
 
+function getRandomVal(inf, sup){
+	let r = THREE.MathUtils.randFloat(inf, sup);
+	r = Math.ceil(r*10)/10;
+	return r;
+}
+
+let randomVal = getRandomVal(0.1, 3.9);
+
+alert(randomVal);
+
 const uniformsData = {
 	u_time: {
 		type: 'f',
 		value: clock.getElapsedTime(),
+	},
+	u_random: {
+		type: 'f',
+		value: randomVal,
 	},
 };
 
@@ -57,8 +71,11 @@ const mareaPlana_VS = `
 
 const mareaTranquila_VS = `
 	// projectionMatrix, modelViewMatrix, position ya las definió threejs
-	
+	// uniform = constantes con valores iniciales
+
 	uniform float u_time;
+
+	uniform float u_random;
 
 	varying vec3 pos;
 
@@ -66,7 +83,7 @@ const mareaTranquila_VS = `
 		vec4 result;
 		pos = position;
 
-		result = vec4(position.x, 4.0*sin(position.z/4.0 + u_time) + 2.0*cos(position.x/6.0 + u_time) + position.y, position.z, 1.0);
+		result = vec4(position.x, u_random*sin(position.z/4.0 + u_time) + u_random*cos(position.x/6.0 + u_time) + position.y, position.z, 1.0);
 
 		//result = vec4(position.x, sin(position.z + u_time) + position.y, position.z, 1.0);
 
@@ -142,7 +159,7 @@ var material = new THREE.ShaderMaterial({
 	wireframe: false,
 	uniforms: uniformsData,
 	vertexShader: mareaTranquila_VS,
-	fragmentShader: colorNormal_FS
+	fragmentShader: colorPsico_FS
 });
 
 material.setValues({wireframe:true}); // apaga o enciende el wireframe
@@ -173,12 +190,21 @@ function onWindowResize( event ) {
 	renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
+let step = 0;
+
+//alert(4.0 % 2==0);
+
 function animate(){
 	requestAnimationFrame(animate);
 	controls.update();
 
 	// actualiza uniforms
 	uniformsData.u_time.value = clock.getElapsedTime();
+	if (step % 3 == 0){
+		uniformsData.u_random.value = getRandomVal(0.1, 3.9);
+	}
+
+	step += 0.1;
 
 	renderer.render(scene, camera);
 }
