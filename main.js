@@ -1,13 +1,20 @@
-//import './style.css'
+import './style.css'
 
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
 
 let scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 1000);
-let renderer = new THREE.WebGLRenderer();
+//let renderer = new THREE.WebGLRenderer();
+//renderer.setSize(window.innerWidth, window.innerHeight);
+//document.body.appendChild(renderer.domElement);
+
+let renderer = new THREE.WebGLRenderer({
+	canvas: document.querySelector('#bg'),
+});
+
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
 
 let clock = new THREE.Clock();
 
