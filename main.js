@@ -22,6 +22,9 @@ let clock = new THREE.Clock();
 
 let controls = new OrbitControls(camera, renderer.domElement);
 
+//controls.minPolarAngle = Math.PI/4;
+controls.maxPolarAngle = Math.PI*0.395;
+
 // set gui
 const gui = new GUI();
 
@@ -37,6 +40,7 @@ function getRandomVal(inf, sup){
 }
 
 let randomVal = getRandomVal(0.1, 3.9);
+let velMarea = 0.9;
 //alert(randomVal);
 
 const uniformsData = {
@@ -48,6 +52,10 @@ const uniformsData = {
 		type: 'f',
 		value: randomVal,
 	},
+	u_velMarea: {
+		type: 'f',
+		value: velMarea,
+	}
 };
 
 const mareaPlana_VS = `
@@ -138,11 +146,12 @@ const mareaAgitada_VS = `
 
 const colorNormal_FS = `
 	uniform float u_time;
+	uniform float u_velMarea;
 
 	varying vec3 pos;
 
 	void main(){
-		gl_FragColor = vec4(tan(pos.x)-8.0*sin(pos.z/4.0 + u_time), 0.0, sin(1.5*u_time), 1.0);
+		gl_FragColor = vec4(tan(pos.x)-8.0*sin(pos.z/4.0 - u_time/u_velMarea), 0.0, sin(1.5*u_time), 1.0);
 	}
 `;
 
@@ -194,11 +203,13 @@ scene.add(box);
 // Elementos del gui
 gui.add(box.material, 'wireframe');
 gui.add(uniformsData.u_random, "value", -3.9, 3.9, 0.1).name('Fuerza del Oleaje');
+gui.add(uniformsData.u_velMarea, "value", 0.1, 0.9, 0.01).name('Velocidad de la marea');
 //gui.add(opc, 'isPsico');
 
 var sphereGeometry = new THREE.SphereGeometry(6, 20, 20);
 var sphere = new THREE.Mesh(sphereGeometry, material2);
 sphere.position.set(0, 6, 0);
+sphere.castShadow = true;
 scene.add(sphere);
 
 camera.position.set(-15, 15, 15);
@@ -211,14 +222,121 @@ const light = new THREE.PointLight(0xffffff, 0.5, 10);
 light.position.set(0, 20, 0);
 scene.add(light);
 
-controls.update();
+//const light = new THREE.SpotLight(0x00ff00, 1, 8, Math.PI / 2, 0);
+//light.position.set(2, 20, 2);
+//const lightHelper = new THREE.SpotLightHelper(light);
+//scene.add(light, lightHelper);
 
-onWindowResize();
-window.addEventListener( 'resize', onWindowResize, false );
+// trayectoria blezier
+// curva1
+const curve1 = new THREE.CubicBezierCurve3(
+	new THREE.Vector3( -30, 30, 0 ),
+	new THREE.Vector3( -30, 30, -30 ),
+	new THREE.Vector3( -30, 20, -30 ),
+	new THREE.Vector3( 0, 20, -30 ),
+);
+
+const points1 = curve1.getPoints( 50 );
+const b1Geometry = new THREE.BufferGeometry().setFromPoints( points1 );
+
+const b1Material = new THREE.LineBasicMaterial( { color: 0x00ff00 } );
+
+// Create the final object to add to the scene
+const curveObject1 = new THREE.Line( b1Geometry, b1Material );
+scene.add(curveObject1);
+
+// curva2
+const curve2 = new THREE.CubicBezierCurve3(
+	new THREE.Vector3( 0, 20, -30 ),
+	new THREE.Vector3( 30, 20, -30 ),
+	new THREE.Vector3( 30, 30, -30 ),
+	new THREE.Vector3( 30, 30, 0 ),
+);
+
+const points2 = curve2.getPoints( 50 );
+const b2Geometry = new THREE.BufferGeometry().setFromPoints( points2 );
+
+const b2Material = new THREE.LineBasicMaterial( { color: 0x00ff00 } );
+
+// Create the final object to add to the scene
+const curveObject2 = new THREE.Line( b2Geometry, b2Material );
+scene.add(curveObject2);
+
+// curva3
+const curve3 = new THREE.CubicBezierCurve3(
+	new THREE.Vector3( 30, 30, 0 ),
+	new THREE.Vector3( 30, 30, 30 ),
+	new THREE.Vector3( 30, 20, 30 ),
+	new THREE.Vector3( 0, 20, 30 ),
+);
+
+const points3 = curve3.getPoints( 50 );
+const b3Geometry = new THREE.BufferGeometry().setFromPoints( points3 );
+
+const b3Material = new THREE.LineBasicMaterial( { color: 0x00ff00 } );
+
+// Create the final object to add to the scene
+const curveObject3 = new THREE.Line( b3Geometry, b3Material );
+scene.add(curveObject3);
+
+// curva4
+const curve4 = new THREE.CubicBezierCurve3(
+	new THREE.Vector3( 0, 20, 30 ),	
+	new THREE.Vector3( -30, 20, 30 ),
+	new THREE.Vector3( -30, 30, 30 ),
+	new THREE.Vector3( -30, 30, 0 ),
+);
+
+const points4 = curve4.getPoints( 50 );
+const b4Geometry = new THREE.BufferGeometry().setFromPoints( points4 );
+
+const b4Material = new THREE.LineBasicMaterial( { color: 0x00ff00 } );
+
+// Create the final object to add to the scene
+const curveObject4 = new THREE.Line( b4Geometry, b4Material );
+scene.add(curveObject4);
+
+// --------------------------
+
+//console.log(points4[0].z);
+
+//console.log(points1);
+const p1 = points1.slice(0, 50);
+const p2 = points2.slice(0, 50);
+const p3 = points3.slice(0, 50);
+const p4 = points4.slice(0, 50);
+/*
+console.log(p1);
+console.log(p2);
+console.log(p3);
+console.log(p4);
+console.log("----");
+console.log(points1);
+console.log(points2);
+console.log(points3);
+console.log(points4);
+*/
+let r = [];
+r = [].concat(p1, p2, p3, p4);
+//console.log(r);
+
+let pointn = 1;
+
+function setBlezierPos(pos){
+	console.log(pos);
+	camera.position.set(r[pos].x, r[pos].y, r[pos].z);
+}
+
+controls.update();
 
 function onWindowResize( event ) {
 	renderer.setSize( window.innerWidth, window.innerHeight );
 }
+onWindowResize();
+window.addEventListener( 'resize', onWindowResize);
+
+let step = 0;
+let pointPosition = 0;
 
 function animate(now){
 	requestAnimationFrame(animate);
@@ -227,6 +345,19 @@ function animate(now){
 	// actualiza uniforms
 	uniformsData.u_time.value = clock.getElapsedTime();
 	//step += 0.1;
+	
+	camera.position.x = Math.cos(step) * 25;
+	camera.position.z = Math.sin(step) * 45;
+	camera.position.y = Math.sin(step + Math.PI/4) * 10 + 20;
+
+	step += 0.01;
+	
+
+	//setBlezierPos(pointPosition);
+	pointPosition += 1;
+	if (pointPosition > 199){
+		pointPosition = 0;
+	}
 
 	renderer.render(scene, camera);
 }
