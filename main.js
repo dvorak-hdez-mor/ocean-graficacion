@@ -7,9 +7,6 @@ import {MathUtils} from 'three';
 
 let scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 1000);
-//let renderer = new THREE.WebGLRenderer();
-//renderer.setSize(window.innerWidth, window.innerHeight);
-//document.body.appendChild(renderer.domElement);
 
 let renderer = new THREE.WebGLRenderer({
 	canvas: document.querySelector('#bg'),
@@ -28,8 +25,8 @@ controls.maxPolarAngle = Math.PI*0.395;
 // set gui
 const gui = new GUI();
 
-var axesHelper = new THREE.AxesHelper(40);
-scene.add(axesHelper);
+//var axesHelper = new THREE.AxesHelper(40);
+//scene.add(axesHelper);
 
 var boxGeometry = new THREE.BoxGeometry(160, 2, 160, 50, 1, 50);
 
@@ -216,16 +213,9 @@ camera.position.set(-15, 15, 15);
 
 camera.lookAt(0,0,0);
 
-//const light = new THREE.AmbientLight(0xffffff);
-//scene.add(light);
 const light = new THREE.PointLight(0xffffff, 0.5, 10);
 light.position.set(0, 20, 0);
 scene.add(light);
-
-//const light = new THREE.SpotLight(0x00ff00, 1, 8, Math.PI / 2, 0);
-//light.position.set(2, 20, 2);
-//const lightHelper = new THREE.SpotLightHelper(light);
-//scene.add(light, lightHelper);
 
 // trayectoria blezier
 // curva1
@@ -239,7 +229,7 @@ const curve1 = new THREE.CubicBezierCurve3(
 const points1 = curve1.getPoints( 50 );
 const b1Geometry = new THREE.BufferGeometry().setFromPoints( points1 );
 
-const b1Material = new THREE.LineBasicMaterial( { color: 0x00ff00 } );
+const b1Material = new THREE.LineBasicMaterial( { color: 0xff0000 } );
 
 // Create the final object to add to the scene
 const curveObject1 = new THREE.Line( b1Geometry, b1Material );
@@ -273,7 +263,7 @@ const curve3 = new THREE.CubicBezierCurve3(
 const points3 = curve3.getPoints( 50 );
 const b3Geometry = new THREE.BufferGeometry().setFromPoints( points3 );
 
-const b3Material = new THREE.LineBasicMaterial( { color: 0x00ff00 } );
+const b3Material = new THREE.LineBasicMaterial( { color: 0x0000ff } );
 
 // Create the final object to add to the scene
 const curveObject3 = new THREE.Line( b3Geometry, b3Material );
@@ -290,7 +280,7 @@ const curve4 = new THREE.CubicBezierCurve3(
 const points4 = curve4.getPoints( 50 );
 const b4Geometry = new THREE.BufferGeometry().setFromPoints( points4 );
 
-const b4Material = new THREE.LineBasicMaterial( { color: 0x00ff00 } );
+const b4Material = new THREE.LineBasicMaterial( { color: 0x0ffff0 } );
 
 // Create the final object to add to the scene
 const curveObject4 = new THREE.Line( b4Geometry, b4Material );
@@ -298,32 +288,16 @@ scene.add(curveObject4);
 
 // --------------------------
 
-//console.log(points4[0].z);
-
-//console.log(points1);
 const p1 = points1.slice(0, 50);
 const p2 = points2.slice(0, 50);
 const p3 = points3.slice(0, 50);
 const p4 = points4.slice(0, 50);
-/*
-console.log(p1);
-console.log(p2);
-console.log(p3);
-console.log(p4);
-console.log("----");
-console.log(points1);
-console.log(points2);
-console.log(points3);
-console.log(points4);
-*/
+
 let r = [];
 r = [].concat(p1, p2, p3, p4);
 //console.log(r);
 
-let pointn = 1;
-
 function setBlezierPos(pos){
-	console.log(pos);
 	camera.position.set(r[pos].x, r[pos].y, r[pos].z);
 }
 
@@ -335,8 +309,26 @@ function onWindowResize( event ) {
 onWindowResize();
 window.addEventListener( 'resize', onWindowResize);
 
+const onKeyDown = function(e){
+	switch(e.code){
+		case 'KeyM':
+			mode = (mode < 3)?mode + 1:0;
+			if (mode == 2){
+				controls.autoRotate = true;
+				controls.autoRotateSpeed = 3;
+				camera.position.set(0, 30, 0);
+			} else {
+				controls.autoRotate = false;
+				camera.position.set(-15, 15, 15);
+			} 
+	}
+}
+
+document.addEventListener('keydown', onKeyDown);
+
 let step = 0;
 let pointPosition = 0;
+let mode = 0;
 
 function animate(now){
 	requestAnimationFrame(animate);
@@ -346,17 +338,21 @@ function animate(now){
 	uniformsData.u_time.value = clock.getElapsedTime();
 	//step += 0.1;
 	
-	camera.position.x = Math.cos(step) * 25;
-	camera.position.z = Math.sin(step) * 45;
-	camera.position.y = Math.sin(step + Math.PI/4) * 10 + 20;
+	switch(mode){
+		case 0:
+			camera.position.x = Math.cos(step) * 25;
+			camera.position.z = Math.sin(step) * 45;
+			camera.position.y = Math.sin(step + Math.PI/4) * 10 + 20;
 
-	step += 0.01;
-	
-
-	//setBlezierPos(pointPosition);
-	pointPosition += 1;
-	if (pointPosition > 199){
-		pointPosition = 0;
+			step += 0.01;
+			break;
+		case 1:
+			setBlezierPos(pointPosition);
+			pointPosition += 1;
+			if (pointPosition > 199){
+				pointPosition = 0;
+			}
+			break;
 	}
 
 	renderer.render(scene, camera);
