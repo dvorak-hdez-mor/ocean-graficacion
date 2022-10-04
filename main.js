@@ -25,6 +25,7 @@ controls.maxPolarAngle = Math.PI*0.395;
 // set gui
 const gui = new GUI();
 
+// helper
 //var axesHelper = new THREE.AxesHelper(40);
 //scene.add(axesHelper);
 
@@ -40,6 +41,24 @@ let randomVal = getRandomVal(0.1, 3.9);
 let velMarea = 0.9;
 //alert(randomVal);
 
+// audio analyser
+var audio = new Audio("audio.mp3");
+window.onload = (event) => {
+	audio.play();
+};
+
+var context = new AudioContext();
+var src = context.createMediaElementSource(audio);
+var analyser = context.createAnalyser();
+src.connect(analyser);
+analyser.connect(context.destination);
+analyser.fftSize = 32;
+var bufferLength = analyser.frequencyBinCount;
+var dataArray = new Uint8Array(bufferLength);
+console.log(dataArray);
+
+let intensidadOleaje = 4*(dataArray[11]/255);
+
 const uniformsData = {
 	u_time: {
 		type: 'f',
@@ -47,7 +66,8 @@ const uniformsData = {
 	},
 	u_random: {
 		type: 'f',
-		value: randomVal,
+		//value: randomVal,
+		value: intensidadOleaje,
 	},
 	u_velMarea: {
 		type: 'f',
@@ -92,7 +112,7 @@ const mareaTranquila_VS = `
 		vec4 result;
 		pos = position;
 
-		result = vec4(position.x, u_random*sin(position.z/4.0 + u_time) + u_random*cos(position.x/6.0 + u_time) + position.y, position.z, 1.0);
+		result = vec4(position.x, u_random*sin(position.z/4.0 + 5.0*u_time) + u_random*cos(position.x/6.0 + u_time) + position.y, position.z, 1.0);
 
 		//result = vec4(position.x, sin(position.z + u_time) + position.y, position.z, 1.0);
 
@@ -320,7 +340,8 @@ const onKeyDown = function(e){
 			} else {
 				controls.autoRotate = false;
 				camera.position.set(-15, 15, 15);
-			} 
+			}
+			break;
 	}
 }
 
@@ -330,13 +351,22 @@ let step = 0;
 let pointPosition = 0;
 let mode = 0;
 
+var last = 0;
 function animate(now){
+	analyser.getByteFrequencyData(dataArray);
+
 	requestAnimationFrame(animate);
 	controls.update();
 
 	// actualiza uniforms
 	uniformsData.u_time.value = clock.getElapsedTime();
+	uniformsData.u_random.value = 10*((dataArray[8]/255)-0.5);
 	//step += 0.1;
+	
+	if(!last || now - last >= 20*1000){
+		//console.log(dataArray[5]/255);
+		console.log(dataArray);
+	}
 	
 	switch(mode){
 		case 0:
