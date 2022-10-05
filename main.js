@@ -103,7 +103,6 @@ const mareaTranquila_VS = `
 	// uniform = constantes con valores iniciales
 
 	uniform float u_time;
-
 	uniform float u_random;
 
 	varying vec3 pos;
@@ -111,8 +110,15 @@ const mareaTranquila_VS = `
 	void main(){
 		vec4 result;
 		pos = position;
-
-		result = vec4(position.x, u_random*sin(position.z/4.0 + 5.0*u_time) + u_random*cos(position.x/6.0 + u_time) + position.y, position.z, 1.0);
+		
+		result = vec4(
+			position.x, // positionX
+			u_random*sin(position.z/4.0 + 5.0*u_time)
+				+ u_random*cos(position.x/6.0 + u_time)
+				+ position.y, // positionY
+			position.z, // positionZ
+			1.0
+		);
 
 		//result = vec4(position.x, sin(position.z + u_time) + position.y, position.z, 1.0);
 
@@ -219,7 +225,7 @@ scene.add(box);
 
 // Elementos del gui
 gui.add(box.material, 'wireframe');
-gui.add(uniformsData.u_random, "value", -3.9, 3.9, 0.1).name('Fuerza del Oleaje');
+//gui.add(uniformsData.u_random, "value", -3.9, 3.9, 0.1).name('Fuerza del Oleaje');
 gui.add(uniformsData.u_velMarea, "value", 0.1, 0.9, 0.01).name('Velocidad de la marea');
 //gui.add(opc, 'isPsico');
 
@@ -249,7 +255,10 @@ const curve1 = new THREE.CubicBezierCurve3(
 const points1 = curve1.getPoints( 50 );
 const b1Geometry = new THREE.BufferGeometry().setFromPoints( points1 );
 
-const b1Material = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+const b1Material = new THREE.LineBasicMaterial( {color: 0xff0000} );
+
+b1Material.transparent = false;
+b1Material.opacity = 0.0;
 
 // Create the final object to add to the scene
 const curveObject1 = new THREE.Line( b1Geometry, b1Material );
@@ -306,8 +315,20 @@ const b4Material = new THREE.LineBasicMaterial( { color: 0x0ffff0 } );
 const curveObject4 = new THREE.Line( b4Geometry, b4Material );
 scene.add(curveObject4);
 
+//curveObject4.visible = false;
+
+//const linesBezier = new THREE.Group();
+//linesBezier.add(curveObject1, curveObject2, curveObject3, curveObject4);
+
+
+//linesBezier.visible = true;
+
+//gui.add(linesBezier, 'visible');
+curveObject1.visible = false;
+gui.add(curveObject1, 'visible');
 // --------------------------
 
+// set camera points
 const p1 = points1.slice(0, 50);
 const p2 = points2.slice(0, 50);
 const p3 = points3.slice(0, 50);
@@ -363,9 +384,19 @@ function animate(now){
 	uniformsData.u_random.value = 10*((dataArray[8]/255)-0.5);
 	//step += 0.1;
 	
+	if (curveObject1.visible){
+		curveObject2.visible = true;
+		curveObject3.visible = true;
+		curveObject4.visible = true;
+	} else {
+		curveObject2.visible = false;
+		curveObject3.visible = false;
+		curveObject4.visible = false;
+	}
+
 	if(!last || now - last >= 20*1000){
 		//console.log(dataArray[5]/255);
-		console.log(dataArray);
+		//console.log(dataArray);
 	}
 	
 	switch(mode){
