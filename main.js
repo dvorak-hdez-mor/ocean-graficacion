@@ -47,6 +47,7 @@ window.onload = (event) => {
 	audio.play();
 };
 
+// sounds
 var context = new AudioContext();
 var src = context.createMediaElementSource(audio);
 var analyser = context.createAnalyser();
@@ -75,6 +76,7 @@ const uniformsData = {
 	}
 };
 
+// shader code
 const mareaPlana_VS = `
 	// projectionMatrix, modelViewMatrix, position ya las definió threejs
 	
@@ -202,6 +204,7 @@ const colorPsico_FS = `
 	}
 `;
 
+// creating materials
 var material = new THREE.ShaderMaterial({
 	wireframe: false,
 	uniforms: uniformsData,
@@ -216,14 +219,14 @@ var material2 = new THREE.ShaderMaterial({
 	fragmentShader: colorNormal2_FS,
 });
 
-material.setValues({wireframe:false}); // apaga o enciende el wireframe
+material.setValues({wireframe:false}); // wireframe on/off
 material.setValues({vertexShader:mareaTranquila_VS});
 
-// uniendo con el shader
+// creating ocean
 var box = new THREE.Mesh(boxGeometry, material);
 scene.add(box);
 
-// Elementos del gui
+// GUI elements
 gui.add(box.material, 'wireframe');
 //gui.add(uniformsData.u_random, "value", -3.9, 3.9, 0.1).name('Fuerza del Oleaje');
 gui.add(uniformsData.u_velMarea, "value", 0.1, 0.9, 0.01).name('Velocidad de la marea');
