@@ -1,5 +1,7 @@
 # Strange Ocean
 
+Interact with my project [here](https://miguehm.github.io/strange-ocean/).
+
 A *psychedelic ocean* using `threejs` library. First steps using `OpenGL` shaders.
 
 ![](https://user-images.githubusercontent.com/80235345/222920349-ad8fe926-620d-41e4-9487-24f13739b306.png)
